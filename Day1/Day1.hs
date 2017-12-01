@@ -7,28 +7,30 @@ main :: IO ()
 main = do
   inp <- readInput
   let sol = solution inp
-  print sol
+  putStrLn $ "Solution to part one is " ++ show sol
+
   let sol2 = solution2 inp
-  print sol2
+  putStrLn $ "Solution to part two is " ++ show sol2
 
 
 solution :: [Integer] -> Integer
-solution xs = sum . catMaybes . map goodPairs $ pairs (xs ++ [head xs])
-  where goodPairs (a,b)
-          | a == b    = Just a
-          | otherwise = Nothing
+solution =sumWrap 1
 
 
 solution2 :: [Integer] -> Integer
-solution2 xs = sum . catMaybes . map goodPairs $ zipWith (,) xs (drop mid xs ++ take mid xs)
-  where goodPairs (a,b)
+solution2 xs = sumWrap mid xs
+  where mid = length xs `div` 2
+
+
+sumWrap :: Int -> [Integer] -> Integer
+sumWrap n xs = sumGoodPairs xs (drop n xs ++ take n xs)
+
+
+sumGoodPairs :: [Integer] -> [Integer] -> Integer
+sumGoodPairs xs ys = sum . catMaybes $ zipWith goodPair xs ys
+  where goodPair a b
           | a == b    = Just a
           | otherwise = Nothing
-        mid = length xs `div` 2
-
-pairs :: [a] -> [(a,a)]
-pairs [] = []
-pairs xs = zipWith (,) xs (tail xs)
 
 
 readInput :: IO [Integer]
