@@ -32,3 +32,8 @@ For example:
 - 12131415 produces 4.
 
 What is the solution to your new captcha?
+
+---
+
+# Solutions
+My solution in [Haskell is here](./Day1.hs)
