@@ -1,6 +1,6 @@
 module Main where
 
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe, catMaybes)
 import Text.Read (readMaybe)
 
 main :: IO ()
@@ -34,6 +34,6 @@ sumGoodPairs xs ys = sum . catMaybes $ zipWith goodPair xs ys
 
 
 readInput :: IO [Integer]
-readInput = catMaybes . map (readMaybe . pure) <$> readFile "input.txt"
+readInput = mapMaybe (readMaybe . pure) <$> readFile "input.txt"
 
 
