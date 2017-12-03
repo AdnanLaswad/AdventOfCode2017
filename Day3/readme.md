@@ -98,6 +98,10 @@ write it two times.
 
 The solutiono to part 1 is [here](./Day3.hs)
 
+---
+
+## Part 2
+
 For the second part I got trapped by the *clever*
 way I solved part 1 and I was really to lazy to
 change my approach.
@@ -106,4 +110,17 @@ Luckyly the sequence is actually one of the *known*
 [Oeis sequences](https://oeis.org/A141481) so I just
 looked up the solution there.
 
-Maybe I'll come back later and fix this.
+### code solution
+I came back and solved it just like you would on paper.
+The algorithm produces the coords for the spiral numbers
+with a similar approach to the one above.
+
+After it `scanr` a map with the known values to
+produce a sequence of values and new maps.
+
+The sequence of those found numbers is then just
+searched for the first value bigger then the
+problems input.
+
+As this runs in under a second even with `runhaskell`
+I'm perfectly fine with it.
