@@ -69,6 +69,33 @@ your puzzle input?
 
 
 # Solutions
+The algorithm used here is based on this observation:
+If you look at how the steps keep increasing just in
+one direction (say downwards) you get:
+
+          0
+        2 1 2
+      4 3 2 3 4
+    6 5 4 3 4 5 6
+    
+basically you can copy the last line and
+increase the step by one but then you have
+two more edges that need an additional step
+(say move in the direction of the sides center).
+
+So I just generate this as a sequence and wrap
+it around a existing layer like this:
+
+    bbbba
+    c221a
+    c301a
+    c344a
+    cdddd
+    
+you need 4 copies of the sides above where
+you skip the first edge so that you don't
+write it two times.
+
 The solutiono to part 1 is [here](./Day3.hs)
 
 For the second part I got trapped by the *clever*
