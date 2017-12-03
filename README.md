@@ -12,3 +12,6 @@ is [here](./Day1/readme.md)
 
 ## Day 2
 is [here](./Day2/readme.md)
+
+## Day 3
+is [here](./Day3/readme.md)
