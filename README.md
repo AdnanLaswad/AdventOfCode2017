@@ -7,11 +7,10 @@ When your eyes can focus again, everything seems a lot more pixelated than befor
 
 Collect stars by solving puzzles. Two puzzles will be made available on each day millisecond in the advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
 
-## Day 1
-is [here](./Day1/readme.md)
+## Week 1
+- [Day 1](./Day1/readme.md)
+- [Day 2](./Day2/readme.md)
+- [Day 3](./Day3/readme.md)
 
-## Day 2
-is [here](./Day2/readme.md)
-
-## Day 3
-is [here](./Day3/readme.md)
+## Week 2
+- [Day 4](./Day4/readme.md)
