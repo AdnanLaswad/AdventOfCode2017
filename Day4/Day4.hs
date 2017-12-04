@@ -24,7 +24,7 @@ isValidPassphrase xs = noDuplicateWords xs && noAnagrams xs
 
 
 noAnagrams :: [String] -> Bool
-noAnagrams xs = length xs == (length $ nub $ map sort xs)
+noAnagrams xs = length xs == length (nub $ map sort xs)
 
 
 noDuplicateWords :: [String] -> Bool
