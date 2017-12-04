@@ -2,15 +2,22 @@
 
 module Main where
 
+import Data.List (sort, group)
 
 main :: IO ()
 main = do
   inp <- readInput
-  putStrLn $ "solve me"
+  
+  let part1 = length . filter isValidPassphrase $ inp
+  putStrLn $ "part 1: " ++ show part1
 
 
-type Input = ()
+type Input = [String] 
 
 
-readInput :: IO Input
-readInput = const () <$> readFile "input.txt"
+isValidPassphrase :: [String] -> Bool
+isValidPassphrase = all ((== 1) . length) . group . sort
+
+
+readInput :: IO [Input]
+readInput = map words . lines <$> readFile "input.txt"
