@@ -96,8 +96,6 @@ you need 4 copies of the sides above where
 you skip the first edge so that you don't
 write it two times.
 
-The solutiono to part 1 is [here](./Day3.hs)
-
 ---
 
 ## Part 2
@@ -110,7 +108,9 @@ Luckyly the sequence is actually one of the *known*
 [Oeis sequences](https://oeis.org/A141481) so I just
 looked up the solution there.
 
-### code solution
+### Haskell solution
+The solution to part 1 is [here](./Day3.hs)
+
 I came back and solved it just like you would on paper.
 The algorithm produces the coords for the spiral numbers
 with a similar approach to the one above.
@@ -124,3 +124,10 @@ problems input.
 
 As this runs in under a second even with `runhaskell`
 I'm perfectly fine with it.
+
+## C# solution
+I redid the day using [C# here](./Day3.cs).
+
+It uses direct formulas where I succeded in finding them in a few
+minutes but for the coords I was to lazy and just enumerate and pick
+the ring coords instead.
