@@ -44,9 +44,14 @@ findUnbalance m b targetWeight =
       let ws = (\n -> (n, weightTree m n)) <$> supporting p
           grps = sortBy (compare `on` length) . groupBy ((==) `on` snd) $ sortBy (compare `on` snd) ws
       in case grps of
-           [] -> targetWeight
-           [xs] -> let supW = sum (snd <$> xs) in targetWeight - supW
+           -- if there are no children then the node itself is the wrong weight
+           []                    -> targetWeight
+           -- if all children have the same weight then we have to adapt the node weight
+           [xs]                  -> let supW = sum (snd <$> xs) in targetWeight - supW
+           -- if there is one child that has a different weight to all the others we
+           -- have to adapt it's weight to be the same as the other childrens weight
            [[(cont,_)], (_,w):_] -> findUnbalance m cont w
+           -- in all other cases the input have to be malformed
            _ -> error ("shitty config at " ++ b)
 
 
