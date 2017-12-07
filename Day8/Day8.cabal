@@ -10,6 +10,7 @@ cabal-version:       >=1.10
 
 executable Day8
   main-is:             Day8.hs
+  other-modules:       Parser
   build-depends:       base >=4.9 && < 5
                      , containers
   default-language:    Haskell2010
