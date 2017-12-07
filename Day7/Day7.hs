@@ -14,26 +14,23 @@ import Parser
 main :: IO ()
 main = do
   inp <- readInput
-  let [base] = findBase inp [] []
+  let [base] = findBase inp
 
   putStrLn $ "part1: " ++ base
 
   let m = buildMap inp
       unb = findUnbalance m base 0
-
+      
   putStrLn $ "part2: " ++ show unb
 
 
 ----------------------------------------------------------------------
 -- part 1
 
-findBase :: Input -> [Name] -> [Name] -> [Name]
-findBase [] onTop canditates = canditates
-findBase (p:rest) onTop canditates =
-  let canditates' = filter (not . (`elem` supporting p)) canditates
-      canditates'' = if name p `elem` onTop then canditates' else name p : canditates'
-      onTop' = onTop ++ supporting p
-  in findBase rest onTop' canditates''
+findBase :: Input -> [Name]
+findBase inp =
+  let children = concatMap supporting inp
+  in filter (not . (`elem` children)) $ map name inp
 
 
 ----------------------------------------------------------------------
