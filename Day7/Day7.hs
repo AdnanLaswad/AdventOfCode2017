@@ -54,8 +54,6 @@ findUnbalance m b targetWeight =
 
 
 ----------------------------------------------------------------------
--- data
-
 type Input = [Program]
 
 
@@ -70,6 +68,7 @@ data Program =
 type Name = String
 
 
+----------------------------------------------------------------------
 -- helpers
 
 weightTree :: Map Name Program -> Name -> Int
@@ -115,3 +114,7 @@ supListP = do
   item <- nameP
   rest <- parseEither (parseChar (== ',') *> ignoreWhiteSpace *> supListP) (pure [])
   return $ item : rest
+
+
+exampleLine :: String
+exampleLine = "fwft (72) -> ktlj, cntj, xhth"
