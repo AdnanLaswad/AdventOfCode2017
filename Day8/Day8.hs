@@ -2,9 +2,9 @@
 
 module Main where
 
-import Control.Monad (foldM)
-import Control.Monad.State (State)
-import qualified Control.Monad.State as St
+import Control.Lens
+import Control.Monad (when)
+import Control.Monad.State (State, execState)
 
 import Data.Function (on)
 import Data.List (maximumBy)
@@ -41,17 +41,14 @@ type Stats = Int
 
 
 run :: Program -> (Stats, Register)
-run = flip St.runState Map.empty . foldM interpret minBound
+run = flip execState (0, Map.empty) . mapM interpret
 
 
-interpret :: Stats -> Command -> Runtime Stats
-interpret highest cmd = do
+interpret :: Command -> Runtime ()
+interpret cmd = do
   condMet <- conditionMet $ cmdCond cmd
-  if condMet then do
-    v <- adjustRegister (cmdOp cmd) (cmdRegister cmd)
-    return $ max v highest
-  else
-    return highest
+  when condMet $
+    adjustRegister (cmdOp cmd) (cmdRegister cmd)
 
 
 conditionMet :: Condition -> Runtime Bool
@@ -59,23 +56,23 @@ conditionMet cond =
   condCheck cond <$> getRegister (condRegister cond)
 
 
-type Runtime a = State Register a
+type Runtime a = State (Stats, Register) a
 
 
-adjustRegister :: (Int -> Int) -> RegName -> Runtime Int
+adjustRegister :: (Int -> Int) -> RegName -> Runtime ()
 adjustRegister f name = do
-  val <- getRegister name
-  let val' = f val
-  setRegister name val'
-  return val'
+  v <- getRegister name
+  setRegister name (f v)
 
 
 getRegister :: RegName -> Runtime Int
-getRegister name = fromMaybe 0 <$> St.gets (Map.lookup name)
+getRegister name = fromMaybe 0 <$> use (_2.at name)
 
 
 setRegister :: RegName -> Int -> Runtime ()
-setRegister name val = St.modify (Map.insert name val)
+setRegister name val = do
+  _1 %= max val
+  _2.at name .= Just val
 
 ----------------------------------------------------------------------
 -- data and parsing
@@ -112,7 +109,7 @@ parseFile file = mapMaybe readLine . lines <$> readFile file
 
 readLine :: String -> Maybe Command
 readLine = eval cmdP
-
+ 
 cmdP :: Parser Command
 cmdP = Command <$> regNameP <*> operationP <*> condP
 
