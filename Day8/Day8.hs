@@ -2,11 +2,15 @@
 
 module Main where
 
+import Control.Monad (foldM)
+import Control.Monad.State (State)
+import qualified Control.Monad.State as St
+
 import Data.Function (on)
-import Data.List (foldl', sortBy)
+import Data.List (maximumBy)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (mapMaybe, fromMaybe, fromJust)
+import Data.Maybe (mapMaybe, fromMaybe)
 
 import Parser
 
@@ -24,41 +28,54 @@ solution :: Program -> (Int, Int)
 solution inp =
   let (highest, res) = run inp
       regValues = Map.toList res
-      highestRegAfter = snd . last . sortBy (compare `on` snd) $ regValues
+      highestRegAfter = snd . maximumBy (compare `on` snd) $ regValues
   in (highestRegAfter, highest)
 
 
 ----------------------------------------------------------------------
 -- interpreter
 
-run :: Program -> (Int, Register)
-run = foldl' interpret (minBound, Map.empty)
+-- | the program statistics are just the highest
+--   register value
+type Stats = Int
 
 
-interpret :: (Int, Register) -> Command -> (Int, Register)
-interpret (highest, rs) cmd =
-  if conditionMet (cmdCond cmd) then
-    let rs' = Map.alter (Just . op . fromMaybe 0) (cmdRegister cmd) rs
-        v   = fromJust $ Map.lookup (cmdRegister cmd) rs'
-    in (max v highest, rs')
+run :: Program -> (Stats, Register)
+run = flip St.runState Map.empty . foldM interpret minBound
+
+
+interpret :: Stats -> Command -> Runtime Stats
+interpret highest cmd = do
+  condMet <- conditionMet $ cmdCond cmd
+  if condMet then do
+    v <- adjustRegister (cmdOp cmd) (cmdRegister cmd)
+    return $ max v highest
   else
-    (highest, rs)
-  where
-    op =
-      case cmdOp cmd of
-        Incr -> (+ (cmdValue cmd))
-        Decr -> subtract (cmdValue cmd)
-    conditionMet cond =
-      let rVal = fromMaybe 0 $ Map.lookup (condRegister cond) rs
-          cVal = condValue cond
-      in case condOp cond of
-        Less      -> rVal <  cVal
-        LessEq    -> rVal <= cVal
-        Equal     -> rVal == cVal
-        NotEqual  -> rVal /= cVal
-        Greater   -> rVal >  cVal
-        GreaterEq -> rVal >= cVal
+    return highest
 
+
+conditionMet :: Condition -> Runtime Bool
+conditionMet cond =
+  condCheck cond <$> getRegister (condRegister cond)
+
+
+type Runtime a = State Register a
+
+
+adjustRegister :: (Int -> Int) -> RegName -> Runtime Int
+adjustRegister f name = do
+  val <- getRegister name
+  let val' = f val
+  setRegister name val'
+  return val'
+
+
+getRegister :: RegName -> Runtime Int
+getRegister name = fromMaybe 0 <$> St.gets (Map.lookup name)
+
+
+setRegister :: RegName -> Int -> Runtime ()
+setRegister name val = St.modify (Map.insert name val)
 
 ----------------------------------------------------------------------
 -- data and parsing
@@ -67,18 +84,12 @@ data Command =
   Command
   { cmdRegister :: RegName
   , cmdOp       :: Operation
-  , cmdValue    :: Int
   , cmdCond     :: Condition
-  } deriving Show
+  }
 
-data Operation
-  = Incr | Decr
-  deriving Show
+type Operation = Int -> Int
 
-
-data Operator
-  = Less | LessEq | Equal | NotEqual | Greater | GreaterEq
-  deriving Show
+type Check = Int -> Bool
 
 type Register = Map RegName Int
 
@@ -87,9 +98,8 @@ type RegName = String
 data Condition =
   Condition
   { condRegister :: RegName
-  , condOp       :: Operator
-  , condValue    :: Int
-  } deriving Show
+  , condCheck    :: Check
+  }
 
 
 type Program = [Command]
@@ -104,40 +114,41 @@ readLine :: String -> Maybe Command
 readLine = eval cmdP
 
 cmdP :: Parser Command
-cmdP = Command <$> regNameP <*> operationP <*> valueP <*> condP
-
-regNameP :: Parser RegName
-regNameP = parseAlphas <* ignoreWhiteSpace
+cmdP = Command <$> regNameP <*> operationP <*> condP
 
 operationP :: Parser Operation
-operationP = parseEither (parseString "inc" *> pure Incr) (parseString "dec" *> pure Decr) <* ignoreWhiteSpace
-
-valueP :: Parser Int
-valueP = parseInt <* ignoreWhiteSpace
+operationP = operatorP <*> valueP
 
 condP :: Parser Condition
 condP = do
   parseString "if"
   ignoreWhiteSpace
   reg <- regNameP
-  op  <- operatorP
-  v   <- valueP
-  return $ Condition reg op v
+  chk <- checkP
+  return $ Condition reg chk
 
+checkP :: Parser Check
+checkP = (flip <$> comparisionP) <*> valueP
 
-operatorP :: Parser Operator
-operatorP =
-  parseEither
-  ( parseEither
-    (parseString "<=" *> pure LessEq)
-    (parseString "<" *> pure Less)
-  )
-  (parseEither ( parseEither
-                 (parseString "!=" *> pure NotEqual)
-                 (parseString "==" *> pure Equal)
-               )
-               ( parseEither
-                 (parseString ">=" *> pure GreaterEq)
-                 (parseString ">" *> pure Greater)
-               )
-  )
+regNameP :: Parser RegName
+regNameP = parseAlphas <* ignoreWhiteSpace
+
+valueP :: Parser Int
+valueP = parseInt <* ignoreWhiteSpace
+
+comparisionP :: Parser (Int -> Int -> Bool)
+comparisionP = parseOneOf
+  [ parseString "<=" *> pure (<=)
+  , parseString "<" *> pure (<)
+  , parseString "!=" *> pure (/=)
+  , parseString "==" *> pure (==)
+  , parseString ">=" *> pure (>=)
+  , parseString ">" *> pure (>)
+  ]
+
+operatorP :: Parser (Int -> Int -> Int)
+operatorP = parseOneOf
+  [ parseString "inc" *> pure (+)
+  , parseString "dec" *> pure subtract
+  ] <* ignoreWhiteSpace
+
