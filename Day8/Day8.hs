@@ -20,7 +20,7 @@ main = do
   putStrLn $ "part2: " ++ show part2
 
 
-solution :: Input -> (Int, Int)
+solution :: Program -> (Int, Int)
 solution inp =
   let (highest, res) = run inp
       regValues = Map.toList res
@@ -31,7 +31,7 @@ solution inp =
 ----------------------------------------------------------------------
 -- interpreter
 
-run :: Input -> (Int, Register)
+run :: Program -> (Int, Register)
 run = foldl' interpret (minBound, Map.empty)
 
 
@@ -92,12 +92,12 @@ data Condition =
   } deriving Show
 
 
-type Input = [Command]
+type Program = [Command]
 
-readInput :: IO Input
+readInput :: IO Program
 readInput = parseFile "input.txt"
 
-parseFile :: String -> IO Input
+parseFile :: String -> IO Program
 parseFile file = mapMaybe readLine . lines <$> readFile file
 
 readLine :: String -> Maybe Command
@@ -141,6 +141,3 @@ operatorP =
                  (parseString ">" *> pure Greater)
                )
   )
-
-exampleLine :: String
-exampleLine = "g dec 231 if bfx > -10"
