@@ -26,6 +26,42 @@ newtype Stats =
 makeLenses ''Stats
 
 
+type Program = [Command]
+
+
+data Command =
+  Command
+  { cmdRegister :: RegName
+  , cmdOp       :: Operation
+  , cmdCond     :: Condition
+  }
+
+
+type Operation = Int -> Int
+
+
+type Check = Int -> Bool
+
+
+type Register = Map RegName Int
+
+
+type RegName = String
+
+
+data Condition =
+  Condition
+  { condRegister :: RegName
+  , condCheck    :: Check
+  }
+
+
+type Runtime a = State (Stats, Register) a
+
+
+----------------------------------------------------------------------
+-- MAIN
+
 main :: IO ()
 main = do
   inp <- readInput
@@ -61,9 +97,6 @@ conditionMet cond =
   condCheck cond <$> getRegister (condRegister cond)
 
 
-type Runtime a = State (Stats, Register) a
-
-
 adjustRegister :: (Int -> Int) -> RegName -> Runtime ()
 adjustRegister f name = do
   v <- getRegister name
@@ -81,31 +114,7 @@ setRegister name val = do
   _2.at name .= Just val
 
 ----------------------------------------------------------------------
--- data and parsing
-
-data Command =
-  Command
-  { cmdRegister :: RegName
-  , cmdOp       :: Operation
-  , cmdCond     :: Condition
-  }
-
-type Operation = Int -> Int
-
-type Check = Int -> Bool
-
-type Register = Map RegName Int
-
-type RegName = String
-
-data Condition =
-  Condition
-  { condRegister :: RegName
-  , condCheck    :: Check
-  }
-
-
-type Program = [Command]
+-- parsing
 
 readInput :: IO Program
 readInput = parseFile "input.txt"
