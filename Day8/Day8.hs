@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 -- Solution to Day 8 of the Advent Of Code 2017
 
 module Main where
@@ -15,6 +16,15 @@ import Data.Maybe (mapMaybe, fromMaybe)
 import Parser
 
 
+-- | the program statistics are just the highest
+--   register value
+newtype Stats =
+  Stats
+  { _highestVal :: Int
+  }
+
+makeLenses ''Stats
+
 
 main :: IO ()
 main = do
@@ -26,22 +36,17 @@ main = do
 
 solution :: Program -> (Int, Int)
 solution inp =
-  let (highest, res) = run inp
+  let (stats, res) = run inp
       regValues = Map.toList res
       highestRegAfter = snd . maximumBy (compare `on` snd) $ regValues
-  in (highestRegAfter, highest)
+  in (highestRegAfter, view highestVal stats)
 
 
 ----------------------------------------------------------------------
 -- interpreter
 
--- | the program statistics are just the highest
---   register value
-type Stats = Int
-
-
 run :: Program -> (Stats, Register)
-run = flip execState (0, Map.empty) . mapM interpret
+run = flip execState (Stats 0, Map.empty) . mapM interpret
 
 
 interpret :: Command -> Runtime ()
@@ -71,7 +76,8 @@ getRegister name = fromMaybe 0 <$> use (_2.at name)
 
 setRegister :: RegName -> Int -> Runtime ()
 setRegister name val = do
-  _1 %= max val
+  -- update the highest register value in the stats
+  _1.highestVal %= max val
   _2.at name .= Just val
 
 ----------------------------------------------------------------------
