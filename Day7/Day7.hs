@@ -8,19 +8,27 @@ import Data.Maybe (mapMaybe)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
+import System.IO (hSetBuffering, BufferMode(..), stdout, stdin)
+
 import Parser
 
 
 main :: IO ()
 main = do
+  hSetBuffering stdout NoBuffering
+  hSetBuffering stdin NoBuffering
+
+  putStr "read input..."
   inp <- readInput
+  putStrLn "done"
+
   let [base] = findBase inp
 
   putStrLn $ "part1: " ++ base
 
   let m = buildMap inp
       unb = findUnbalance m base 0
-      
+
   putStrLn $ "part2: " ++ show unb
 
 
