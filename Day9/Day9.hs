@@ -3,8 +3,9 @@
 module Main where
 
 import Data.Maybe (fromJust)
-
 import Parser
+
+
 
 main :: IO ()
 main = do
@@ -17,6 +18,9 @@ main = do
   putStrLn $ "part 2: " ++ show part2
 
 
+----------------------------------------------------------------------
+-- data and types
+
 type Input = Group
 
 
@@ -24,11 +28,15 @@ data Group =
   Group [Content]
   deriving Show
 
+
 data Content
   = Inner Group
   | Garbage String
   deriving Show
 
+
+----------------------------------------------------------------------
+-- algorithm
 
 score :: Int -> Group -> Int
 score s (Group cs) = s + sum (map (scoreContent $ s) cs)
@@ -44,6 +52,9 @@ countGarbageChars (Group cs) = sum $ map countGarbageChars' cs
   where countGarbageChars' (Inner g)    = countGarbageChars g
         countGarbageChars' (Garbage g)  = length g
 
+
+----------------------------------------------------------------------
+-- inpt and parsing
 
 readInput :: IO Input
 readInput = fromJust . eval groupP <$> readFile "input.txt"
