@@ -57,7 +57,7 @@ countGarbageChars (Group cs) = sum $ map countGarbageChars' cs
 -- inpt and parsing
 
 readInput :: IO Input
-readInput = fromJust . eval groupP <$> readFile "input.txt"
+readInput = fromJust . eval groupP <$> readFile "../input.txt"
 
 
 groupP :: Parser Group
