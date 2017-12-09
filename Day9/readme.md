@@ -79,4 +79,5 @@ characters or the `!` doing the canceling.
 How many non-canceled characters are within the garbage in your puzzle input?
 
 ## Solution
-in [Haskell is here](./haskell/Day9.hs)
+- in [Haskell is here](./haskell/Day9.hs)
+- in [C# is here](./csharp/Program.cs)
