@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Monad (unless)
 import Data.Maybe (fromJust)
 import Parser
 
@@ -24,7 +25,7 @@ main = do
 type Input = Group
 
 
-data Group =
+newtype Group =
   Group [Content]
   deriving Show
 
@@ -39,7 +40,7 @@ data Content
 -- algorithm
 
 score :: Int -> Group -> Int
-score s (Group cs) = s + sum (map (scoreContent $ s) cs)
+score s (Group cs) = s + sum (map (scoreContent s) cs)
 
 
 scoreContent :: Int -> Content -> Int
@@ -61,7 +62,7 @@ readInput = fromJust . eval groupP <$> readFile "../input.txt"
 
 
 groupP :: Parser Group
-groupP = Group <$> (parseBetween (charP '{') (charP '}') $ contentP `parseSepBy` (charP ','))
+groupP = Group <$> parseBetween (charP '{') (charP '}') (contentP `parseSepBy` charP ',')
 
 
 contentP :: Parser Content
@@ -75,13 +76,14 @@ garbageP = parseBetween (charP '<') (charP '>') (parseMany $ allButP '>')
 allButP :: Char -> Parser Char
 allButP c = do
   c' <- nextUnignoredCharP
-  if c' /= c then return c' else failParse
+  unless (c' /= c) failParse
+  return c'
 
 
 charP :: Char -> Parser ()
 charP c = do
   c' <- nextUnignoredCharP
-  if c' == c then return () else failParse
+  unless (c' == c) failParse
 
 
 nextUnignoredCharP :: Parser Char
