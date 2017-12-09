@@ -61,7 +61,7 @@ readInput = fromJust . eval groupP <$> readFile "input.txt"
 
 
 groupP :: Parser Group
-groupP = Group <$> (parseBetween (oneP '{') (oneP '}') $ contentP `parseSepBy` (oneP ','))
+groupP = Group <$> (parseBetween (charP '{') (charP '}') $ contentP `parseSepBy` (charP ','))
 
 
 contentP :: Parser Content
@@ -69,26 +69,26 @@ contentP = parseEither (Inner <$> groupP) (Garbage <$> garbageP)
 
 
 garbageP :: Parser String
-garbageP = parseBetween (oneP '<') (oneP '>') (parseMany $ allButP '>')
+garbageP = parseBetween (charP '<') (charP '>') (parseMany $ allButP '>')
 
 
 allButP :: Char -> Parser Char
 allButP c = do
-  c' <- charP
+  c' <- nextUnignoredCharP
   if c' /= c then return c' else failParse
 
 
-oneP :: Char -> Parser ()
-oneP c = do
-  c' <- charP
+charP :: Char -> Parser ()
+charP c = do
+  c' <- nextUnignoredCharP
   if c' == c then return () else failParse
 
 
-charP :: Parser Char
-charP = do
-  c <- parsePred (const True)
+nextUnignoredCharP :: Parser Char
+nextUnignoredCharP = do
+  c <- parseAny
   if c == '!' then do
-    _ <- parsePred (const True)
-    charP
+    _ <- parseAny
+    nextUnignoredCharP
   else
     return c
