@@ -18,6 +18,12 @@ namespace Day9
         }
     }
 
+    interface Content
+    {
+        int GargabeCharCount { get; }
+        int Score (int outer);
+    }
+
     class Group : Content
     {
         private readonly Content[] _content;
@@ -27,11 +33,9 @@ namespace Day9
             _content = content;
         }
 
-        public IEnumerable<Content> Contents => _content;
+        public int GargabeCharCount => _content.Sum(c => c.GargabeCharCount);
 
-        public override int GargabeCharCount => _content.Sum(c => c.GargabeCharCount);
-
-        public override int Score(int outer)
+        public int Score(int outer)
         {
             var thisLayer = outer + 1;
             var innerSum = _content.Sum(c => c.Score(thisLayer));
@@ -48,18 +52,12 @@ namespace Day9
             _garbage = garbage;
         }
 
-        public string Value => _garbage;
-        public override int GargabeCharCount => _garbage.Length;
-        public override int Score(int outer) 
+        public int GargabeCharCount => _garbage.Length;
+
+        public int Score(int outer) 
         {
             return 0;
         }
-    }
-
-    abstract class Content
-    {
-        public abstract int GargabeCharCount { get; }
-        public abstract int Score (int outer);
     }
 
     class Parser 
@@ -170,11 +168,6 @@ namespace Day9
         public ParserPos MoveRight()
         {
             return new ParserPos(_input, _index + 1);
-        }
-
-        public ParserPos MoveLeft()
-        {
-            return new ParserPos(_input, _index - 1);
         }
 
         public bool EndOfStream => _index >= _input.Length;
