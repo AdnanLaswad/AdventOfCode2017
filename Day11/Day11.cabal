@@ -1,6 +1,6 @@
-name:                Day10
+name:                Day11
 version:             0.1.0.0
-synopsis:            day 10 from advent of code 2017
+synopsis:            day 11 from advent of code 2017
 license-file:        LICENSE
 author:              Carsten Koenig
 maintainer:          Carsten@gettingsharper.de
@@ -8,8 +8,8 @@ category:            Game
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable Day10
-  main-is:             Day10.hs
+executable Day11
+  main-is:             Day11.hs
   other-modules:       Parser
   build-depends:       base >=4.9 && < 5
                      , containers
