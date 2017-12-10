@@ -11,7 +11,7 @@ main :: IO ()
 main = do
   inp <- readInput
 
-  putStrLn $ "part 1: " ++ show (part1 $ map read $ split inp)
+  putStrLn $ "part 1: " ++ show (part1 $ toList inp)
   putStrLn $ "part 2: " ++ part2 inp
 
 
@@ -70,8 +70,5 @@ readInput =
   head . lines <$> readFile "input.txt"
 
 
-split :: String -> [String]
-split = (uncurry (:)) . foldr f ([],[])
-  where
-    f ',' (acc, ls) = ([], acc:ls)
-    f c   (acc, ls) = (c:acc, ls)
+toList :: String -> [Int]
+toList inp = read $ '[' : inp ++ "]"
