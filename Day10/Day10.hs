@@ -71,8 +71,7 @@ readInput =
 
 
 split :: String -> [String]
-split = go []
+split = (uncurry (:)) . foldr f ([],[])
   where
-    go acc []         = if null acc then [] else [reverse acc]
-    go acc (',':rest) = reverse acc : go [] rest
-    go acc (c  :rest) = go (c:acc) rest
+    f ',' (acc, ls) = ([], acc:ls)
+    f c   (acc, ls) = (c:acc, ls)
