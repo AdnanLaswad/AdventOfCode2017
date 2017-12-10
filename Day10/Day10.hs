@@ -15,6 +15,9 @@ main = do
   putStrLn $ "part 2: " ++ part2 inp
 
 
+----------------------------------------------------------------------
+-- algorithm
+
 part1 :: [Int] -> Int
 part1 inp =
   let (a:b:_) = steps [0..255] inp
@@ -41,7 +44,7 @@ final :: String -> [Int]
 final inp = map ord  inp ++ [17, 31, 73, 47, 23]
 
 
-steps :: [Int] -> [Int] -> [Int]
+steps :: [a] -> [Int] -> [a]
 steps list = go 0 (0, list)
   where
     go _ (_, xs) []        = xs
@@ -57,6 +60,9 @@ step listLen skip l (cur, list) = (cur', list')
     list' = start ++ end
     cur' = (cur + skip + l) `mod` listLen
 
+
+----------------------------------------------------------------------
+-- read input
 
 readInput :: IO String
 readInput =
