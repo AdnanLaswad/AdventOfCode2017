@@ -3,6 +3,8 @@
 module Main where
 
 import Data.List (foldl', scanl')
+import Data.Monoid ((<>), Sum(..))
+
 
 main :: IO ()
 main = do
@@ -27,50 +29,42 @@ data Move
   deriving Show
 
 
-type Coord = (Int,Int)
+type Coord = (Sum Int, Sum Int)
 
 
 ----------------------------------------------------------------------
 -- solutions
 
 part1 :: [Move] -> Int
-part1 = hexDist start . moves start
-
+part1 = hexDist . moves
 
 part2 :: [Move] -> Int
-part2 = maximum . map (hexDist start) . coords start
+part2 = maximum . map hexDist . coords
 
 
 ----------------------------------------------------------------------
 -- hex-coord helpers
 
-start :: Coord
-start = (0,0)
+direction :: Move -> Coord
+direction North     = (0,  1)
+direction NorthEast = (1,  1)
+direction SouthEast = (1,  0)
+direction South     = (0, -1)
+direction SouthWest = (-1,-1)
+direction NorthWest = (-1, 0)
 
 
-move :: Move -> Coord -> Coord
-move North     (x,y) = (x  ,y+1)
-move NorthEast (x,y) = (x+1,y+1)
-move SouthEast (x,y) = (x+1,y)
-move South     (x,y) = (x  ,y-1)
-move SouthWest (x,y) = (x-1,y-1)
-move NorthWest (x,y) = (x-1,y)
+moves :: [Move] -> Coord
+moves = foldMap direction
 
 
-moves :: Coord -> [Move] -> Coord
-moves start = foldl' (flip move) start
+coords :: [Move] -> [Coord]
+coords = scanl' (\coord move -> coord <> direction move) mempty
 
 
-coords :: Coord -> [Move] -> [Coord]
-coords start = scanl' (flip move) start
-
-
-hexDist :: Coord -> Coord -> Int
-hexDist (x,y) (x',y') =
-  let dX = x - x'
-      dY = y -y'
-      dD = dY - dX
-  in maximum $ map abs [dX,dY,dD]
+hexDist :: Coord -> Int
+hexDist (Sum x, Sum y) =
+  maximum $ map abs [x, y, x-y]
 
 
 ----------------------------------------------------------------------
