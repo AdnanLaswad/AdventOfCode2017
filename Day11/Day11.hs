@@ -11,6 +11,9 @@ main = do
   putStrLn $ "part 2: " ++ show (part2 inp)
 
 
+----------------------------------------------------------------------
+-- data and types
+
 type Input = [Move]
 
 
@@ -27,6 +30,9 @@ data Move
 type Coord = (Int,Int)
 
 
+----------------------------------------------------------------------
+-- solutions
+
 part1 :: [Move] -> Int
 part1 = hexDist start . moves start
 
@@ -35,14 +41,18 @@ part2 :: [Move] -> Int
 part2 = maximum . map (hexDist start) . coords start
 
 
+----------------------------------------------------------------------
+-- hex-coord helpers
+
 start :: Coord
 start = (0,0)
 
+
 move :: Move -> Coord -> Coord
-move North (x,y)     = (x,y+1)
+move North     (x,y) = (x  ,y+1)
 move NorthEast (x,y) = (x+1,y+1)
 move SouthEast (x,y) = (x+1,y)
-move South (x,y)     = (x,y-1)
+move South     (x,y) = (x  ,y-1)
 move SouthWest (x,y) = (x-1,y-1)
 move NorthWest (x,y) = (x-1,y)
 
@@ -63,6 +73,17 @@ hexDist (x,y) (x',y') =
   in maximum $ map abs [dX,dY,dD]
 
 
+----------------------------------------------------------------------
+-- read input
+
+readInput :: IO Input
+readInput = readMoves <$> readFile "input.txt"
+
+
+readMoves :: String -> [Move]
+readMoves inp = read ('[' : inp ++ "]")
+
+
 instance Read Move where
   readsPrec _ ('n':'e':rest) = [(NorthEast, rest)]
   readsPrec _ ('n':'w':rest) = [(NorthWest, rest)]
@@ -71,11 +92,3 @@ instance Read Move where
   readsPrec _ ('s':'w':rest) = [(SouthWest, rest)]
   readsPrec _ ('s':rest)     = [(South, rest)]
   readsPrec _ _              = []
-
-
-readInput :: IO Input
-readInput = readMoves <$> readFile "input.txt"
-
-
-readMoves :: String -> [Move]
-readMoves inp = read ('[' : inp ++ "]")
