@@ -20,6 +20,9 @@ main = do
   putStrLn $ "part 2: " ++ show (part2 g)
 
 
+----------------------------------------------------------------------
+-- data and types
+
 type Input = [(Id, [Id])]
 
 type Connection = (Id, Id)
@@ -31,6 +34,9 @@ type Graph = IntMap [Id]
 type Group = [Id]
 
 
+----------------------------------------------------------------------
+-- solutions
+
 part1 :: Graph -> Int
 part1 g = length $ epsClosure g 0
 
@@ -38,6 +44,9 @@ part1 g = length $ epsClosure g 0
 part2 :: Graph -> Int
 part2 g = length $ groups g
 
+
+----------------------------------------------------------------------
+-- graph functions
 
 groups :: Graph -> [Group]
 groups g = go (nodes g)
@@ -65,6 +74,7 @@ epsClosure graph i = go [] [i]
 connections :: Graph -> Id -> [Id]
 connections g i = fromMaybe [] $ Map.lookup i g
 
+
 buildGraph :: Input -> Graph
 buildGraph inp = foldr insertCon emptyGraph [ (f,t) | (f,ts) <- inp, t <- ts ]
 
@@ -78,6 +88,9 @@ insertCon (from,to) =
   Map.insertWith (++) from [to]
   . Map.insertWith (++) to [from]
 
+
+----------------------------------------------------------------------
+-- parse input
 
 readInput :: IO Input
 readInput = mapMaybe (eval lineP) . lines <$> readFile "input.txt"
