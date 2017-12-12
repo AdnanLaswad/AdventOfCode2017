@@ -6,6 +6,7 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as Map
 
 import Data.Maybe (mapMaybe, fromMaybe)
+import Data.List ((\\))
 
 import Parser
 
@@ -14,12 +15,12 @@ main :: IO ()
 main = do
   inp <- readInput
   let g = buildGraph inp
-  
+
   putStrLn $ "part 1: " ++ show (part1 g)
+  putStrLn $ "part 2: " ++ show (part2 g)
 
 
 type Input = [(Id, [Id])]
-
 
 type Connection = (Id, Id)
 
@@ -27,9 +28,28 @@ type Id = Int
 
 type Graph = IntMap [Id]
 
+type Group = [Id]
+
 
 part1 :: Graph -> Int
 part1 g = length $ epsClosure g 0
+
+
+part2 :: Graph -> Int
+part2 g = length $ groups g
+
+
+groups :: Graph -> [Group]
+groups g = go (nodes g)
+  where
+    go [] = []
+    go (i:is) =
+      let gr = epsClosure g i
+      in gr : go (is \\ gr)
+
+
+nodes :: Graph -> [Id]
+nodes = Map.keys
 
 
 epsClosure :: Graph -> Id -> [Id]
@@ -73,4 +93,3 @@ idP = parseInt <* ignoreWhiteSpace
 listP :: Parser [Id]
 listP = parseString "<->" *> ignoreWhiteSpace *>
         (parseInt `parseSepBy` parseString ", ")
-
