@@ -5,8 +5,10 @@ module Main where
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as Map
 
+import Data.IntSet (IntSet, (\\))
+import qualified Data.IntSet as Set
+
 import Data.Maybe (mapMaybe, fromMaybe)
-import Data.List ((\\))
 
 import Parser
 
@@ -31,14 +33,16 @@ type Id = Int
 
 type Graph = IntMap [Id]
 
-type Group = [Id]
+type Nodes = IntSet
+
+type Group = IntSet
 
 
 ----------------------------------------------------------------------
 -- solutions
 
 part1 :: Graph -> Int
-part1 g = length $ epsClosure g 0
+part1 g = Set.size $ epsClosure g 0
 
 
 part2 :: Graph -> Int
@@ -51,24 +55,26 @@ part2 g = length $ groups g
 groups :: Graph -> [Group]
 groups g = go (nodes g)
   where
-    go [] = []
-    go (i:is) =
-      let gr = epsClosure g i
-      in gr : go (is \\ gr)
+    go ns =
+      if Set.null ns
+      then []
+      else
+        let gr = epsClosure g (Set.findMin ns)
+        in  gr : go (ns \\ gr)
 
 
-nodes :: Graph -> [Id]
-nodes = Map.keys
+nodes :: Graph -> Nodes
+nodes = Set.fromList . Map.keys
 
 
-epsClosure :: Graph -> Id -> [Id]
-epsClosure graph i = go [] [i]
+epsClosure :: Graph -> Id -> Nodes
+epsClosure graph i = go Set.empty [i]
   where
     go visited [] = visited
     go visited (i:is) =
-      if i `elem` visited
+      if i `Set.member` visited
       then go visited is
-      else go (i:visited) (is ++ connections graph i)
+      else go (Set.insert i visited) (is ++ connections graph i)
 
 
 connections :: Graph -> Id -> [Id]
