@@ -138,6 +138,3 @@ scannerP = Scanner <$> layerP <*> rangeP
 
 example :: Input
 example = [ Scanner 0 3, Scanner 1 2, Scanner 4 4, Scanner 6 4]
-
-
-
