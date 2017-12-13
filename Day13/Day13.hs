@@ -91,7 +91,7 @@ isCaught c =
   let
     p  = pos c
     r  = getRange c p
-    sp = scannerPos (step c) <$> r
+    sp = (step c `mod`) . cycleLength <$> r
   in sp == Just 0
 
 
@@ -107,21 +107,15 @@ moveScanner :: Config -> Config
 moveScanner c = c { step = step c + 1 }
 
 
-scannerPos :: Int -> Int -> Int
-scannerPos r s = (cycle $ [0..r-1] ++ [r-2,r-3..1]) !! s
+cycleLength :: Range -> Int
+cycleLength r = 2 * r - 2
 
 
 ----------------------------------------------------------------------
 -- mathy part 2 because of optimization
 
 valids :: [Scanner] -> [Int]
-valids = foldr possibilities [0..]
-
-
-possibilities :: Scanner -> [Int] -> [Int]
-possibilities sc xs = filter notHit xs
-  where notHit i = (i + layer sc) `mod` cyc /= 0
-        cyc = 2 * range sc - 2
+valids = orderedDiff [0..] . invalids
 
 
 invalids :: [Scanner] -> [Int]
@@ -131,7 +125,8 @@ invalids = foldr merge [] . map invalidDelays
 invalidDelays :: Scanner -> [Int]
 invalidDelays sc = [fst,fst + cyc..]
   where fst = (negate $ layer sc) `mod` cyc
-        cyc = 2 * range sc - 2
+        cyc = cycleLength $ range sc
+
 
 merge :: Ord a => [a] -> [a] -> [a]
 merge xs [] = xs
@@ -140,6 +135,15 @@ merge xs@(x:xs') ys@(y:ys')
   | x == y    = x : merge xs' ys'
   | x <  y    = x : merge xs' ys
   | otherwise = y : merge xs ys'
+
+
+orderedDiff :: Ord a => [a] -> [a] -> [a]
+orderedDiff [] _  = []
+orderedDiff xs [] = xs
+orderedDiff xs@(x:xs') ys@(y:ys')
+  | x == y    = orderedDiff xs' ys'
+  | x <  y    = x : orderedDiff xs' ys
+  | otherwise = orderedDiff xs ys'
 
 ----------------------------------------------------------------------
 -- input reading/parsing
