@@ -126,7 +126,7 @@ catches sc d = (d + layer sc) `mod` (cycleLength $ range sc) == 0
 -- input reading/parsing
 
 readInput :: IO Input
-readInput = mapMaybe (eval scannerP) . lines <$> readFile "input.txt"
+readInput = mapMaybe (eval scannerP) . lines <$> readFile "../input.txt"
 
 
 scannerP :: Parser Scanner
