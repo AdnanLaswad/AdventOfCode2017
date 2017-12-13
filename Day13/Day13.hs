@@ -28,7 +28,7 @@ part1 inp =
 
 
 part2 :: Input -> Int
-part2 inp = head $ valids inp
+part2 inp = head $ filter (not . anyCatches inp) [0..]
 
 
 ----------------------------------------------------------------------
@@ -114,36 +114,13 @@ cycleLength r = 2 * r - 2
 ----------------------------------------------------------------------
 -- mathy part 2 because of optimization
 
-valids :: [Scanner] -> [Int]
-valids = orderedDiff [0..] . invalids
+anyCatches :: [Scanner] -> Int -> Bool
+anyCatches scs d = any (flip catches d) scs
 
 
-invalids :: [Scanner] -> [Int]
-invalids = foldr merge [] . map invalidDelays
+catches :: Scanner -> Int -> Bool
+catches sc d = (d + layer sc) `mod` (cycleLength $ range sc) == 0
 
-
-invalidDelays :: Scanner -> [Int]
-invalidDelays sc = [fst,fst + cyc..]
-  where fst = (negate $ layer sc) `mod` cyc
-        cyc = cycleLength $ range sc
-
-
-merge :: Ord a => [a] -> [a] -> [a]
-merge xs [] = xs
-merge [] ys = ys
-merge xs@(x:xs') ys@(y:ys')
-  | x == y    = x : merge xs' ys'
-  | x <  y    = x : merge xs' ys
-  | otherwise = y : merge xs ys'
-
-
-orderedDiff :: Ord a => [a] -> [a] -> [a]
-orderedDiff [] _  = []
-orderedDiff xs [] = xs
-orderedDiff xs@(x:xs') ys@(y:ys')
-  | x == y    = orderedDiff xs' ys'
-  | x <  y    = x : orderedDiff xs' ys
-  | otherwise = orderedDiff xs ys'
 
 ----------------------------------------------------------------------
 -- input reading/parsing
