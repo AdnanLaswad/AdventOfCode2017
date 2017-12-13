@@ -24,7 +24,7 @@ main = do
 part1 :: Input -> Int
 part1 inp =
   let c = init 0 inp
-  in sum . map (\(a,_,_) -> a) $ game c
+  in sum . map fst $ game c
 
 
 part2 :: Input -> Int
@@ -55,16 +55,15 @@ type Layer = Int
 type Range = Int
 
 
-getsCaught :: Config -> Bool
-getsCaught = any (\(_,c,_) -> c) . game
+----------------------------------------------------------------------
+-- modeling for part 1
 
-
-game :: Config -> [(Int, Bool, Config)]
+game :: Config -> [(Int, Config)]
 game conf =
   let l = gameSize conf
-  in scanl' go (0, False, conf) (replicate (l+1) ())
+  in scanl' go (0, conf) (replicate (l+1) ())
   where
-    go (_,_,c) () = round c
+    go (_,c) () = round c
 
 
 init :: Int -> Input -> Config
@@ -76,7 +75,7 @@ gameSize :: Config -> Int
 gameSize = maximum . map layer . Map.elems . layout
 
 
-round :: Config -> (Int, Bool, Config)
+round :: Config -> (Int, Config)
 round c =
   let stepIn   = movePos c
       depth    = pos stepIn
@@ -84,7 +83,7 @@ round c =
       caugth   = isCaught stepIn
       severity = if caugth then depth * range else 0
       nextC    = moveScanner stepIn
-  in (severity, caugth, nextC)
+  in (severity, nextC)
 
 
 isCaught :: Config -> Bool
@@ -92,7 +91,7 @@ isCaught c =
   let
     p  = pos c
     r  = getRange c p
-    sp = flip scannerPos (step c) <$> r
+    sp = scannerPos (step c) <$> r
   in sp == Just 0
 
 
@@ -111,6 +110,20 @@ moveScanner c = c { step = step c + 1 }
 scannerPos :: Int -> Int -> Int
 scannerPos r s = (cycle $ [0..r-1] ++ [r-2,r-3..1]) !! s
 
+
+----------------------------------------------------------------------
+-- mathy part 2 because of optimization
+
+valids :: [Scanner] -> [Int]
+valids = foldr possibilities [0..]
+
+
+possibilities :: Scanner -> [Int] -> [Int]
+possibilities sc xs = filter notHit xs
+  where notHit i = (i + layer sc) `mod` cyc /= 0
+        cyc = 2 * range sc - 2
+
+
 ----------------------------------------------------------------------
 -- input reading/parsing
 
@@ -127,19 +140,6 @@ scannerP = Scanner <$> layerP <*> rangeP
 
 example :: Input
 example = [ Scanner 0 3, Scanner 1 2, Scanner 4 4, Scanner 6 4]
-
-
-----------------------------------------------------------------------
--- Alternative:
-
-valids :: [Scanner] -> [Int]
-valids = foldr possibilities [0..]
-
-
-possibilities :: Scanner -> [Int] -> [Int]
-possibilities sc xs = filter notHit xs
-  where notHit i = (i + layer sc) `mod` cyc /= 0
-        cyc = 2 * range sc - 2
 
 
 
