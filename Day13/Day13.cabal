@@ -9,7 +9,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 executable Day13
-  main-is:             Day12.hs
+  main-is:             Day13.hs
   other-modules:       Parser
   build-depends:       base >=4.9 && < 5
                      , containers

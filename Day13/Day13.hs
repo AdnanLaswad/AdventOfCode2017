@@ -18,12 +18,18 @@ main = do
   inp <- readInput
 
   putStrLn $ "part 1: " ++ show (part1 inp)
+  putStrLn $ "part 2: " ++ show (part2 inp)
 
 
 part1 :: Input -> Int
 part1 inp =
-  let c = init inp
-  in sum . map fst $ game c
+  let c = init 0 inp
+  in sum . map (\(a,_,_) -> a) $ game c
+
+
+part2 :: Input -> Int
+part2 inp = head $ valids inp
+
 
 ----------------------------------------------------------------------
 -- data and types
@@ -49,16 +55,20 @@ type Layer = Int
 type Range = Int
 
 
-game :: Config -> [(Int, Config)]
+getsCaught :: Config -> Bool
+getsCaught = any (\(_,c,_) -> c) . game
+
+
+game :: Config -> [(Int, Bool, Config)]
 game conf =
   let l = gameSize conf
-  in scanl' go (0, conf) (replicate (l+1) ())
+  in scanl' go (0, False, conf) (replicate (l+1) ())
   where
-    go (_,c) () = round c
+    go (_,_,c) () = round c
 
 
-init :: Input -> Config
-init inp = Config m 0 (-1)
+init :: Int -> Input -> Config
+init delay inp = Config m delay (-1)
   where m = Map.fromList [ (layer s, s) | s <- inp ]
 
 
@@ -66,14 +76,15 @@ gameSize :: Config -> Int
 gameSize = maximum . map layer . Map.elems . layout
 
 
-round :: Config -> (Int, Config)
+round :: Config -> (Int, Bool, Config)
 round c =
   let stepIn   = movePos c
       depth    = pos stepIn
       range    = fromMaybe 0 $ getRange c (pos stepIn)
-      severity = if isCaught stepIn then depth * range else 0
+      caugth   = isCaught stepIn
+      severity = if caugth then depth * range else 0
       nextC    = moveScanner stepIn
-  in (severity, nextC)
+  in (severity, caugth, nextC)
 
 
 isCaught :: Config -> Bool
@@ -116,3 +127,19 @@ scannerP = Scanner <$> layerP <*> rangeP
 
 example :: Input
 example = [ Scanner 0 3, Scanner 1 2, Scanner 4 4, Scanner 6 4]
+
+
+----------------------------------------------------------------------
+-- Alternative:
+
+valids :: [Scanner] -> [Int]
+valids = foldr possibilities [0..]
+
+
+possibilities :: Scanner -> [Int] -> [Int]
+possibilities sc xs = filter notHit xs
+  where notHit i = (i + layer sc) `mod` cyc /= 0
+        cyc = 2 * range sc - 2
+
+
+
