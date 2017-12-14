@@ -54,7 +54,7 @@ readGraph = buildGraph <$> readInput
 
 
 readInput :: IO Input
-readInput = mapMaybe (eval lineP) . lines <$> readFile "input.txt"
+readInput = mapMaybe (eval lineP) . lines <$> readFile "../input.txt"
 
 
 lineP :: Parser (Id, [Id])
