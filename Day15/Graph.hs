@@ -1,30 +1,35 @@
 module Graph where
 
-import Data.IntMap.Strict (IntMap)
-import qualified Data.IntMap.Strict as Map
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 
-import Data.IntSet (IntSet, (\\))
-import qualified Data.IntSet as Set
+import Data.Set (Set, (\\))
+import qualified Data.Set as Set
 
 import Data.Maybe (mapMaybe, fromMaybe)
 
 ----------------------------------------------------------------------
 -- data and types
 
-type Connection = (Id, Id)
+type Connection n w = (n, n, w)
 
-type Id = Int
+data Node n w =
+  Node
+  { nodeId :: n
+  , nodeConnections :: [(w, n)]
+  } deriving Show
 
-type Graph = IntMap [Id]
 
-type Nodes = IntSet
+type Graph n w = Map n (Node n w)
 
-type Group = IntSet
+type Nodes n = Set n
+
+type Group n = Set n
 
 ----------------------------------------------------------------------
 -- graph functions
 
-groups :: Graph -> [Group]
+groups :: Ord n => Graph n w -> [Group n]
 groups g = go (nodes g)
   where
     go ns =
@@ -35,11 +40,11 @@ groups g = go (nodes g)
         in  gr : go (ns \\ gr)
 
 
-nodes :: Graph -> Nodes
+nodes :: Ord n => Graph n w -> Nodes n
 nodes = Set.fromList . Map.keys
 
 
-epsClosure :: Graph -> Id -> Nodes
+epsClosure :: Ord n => Graph n w -> n -> Nodes n
 epsClosure graph i = go Set.empty [i]
   where
     go visited [] = visited
@@ -49,15 +54,20 @@ epsClosure graph i = go Set.empty [i]
       else go (Set.insert i visited) (is ++ connections graph i)
 
 
-connections :: Graph -> Id -> [Id]
-connections g i = fromMaybe [] $ Map.lookup i g
+connections :: Ord n => Graph n w -> n -> [n]
+connections g i =
+  fromMaybe []
+  $ fmap (fmap snd . nodeConnections)
+  $ Map.lookup i g
 
 
-emptyGraph :: Graph
+emptyGraph :: Graph n w
 emptyGraph = Map.empty
 
 
-insertCon :: Connection -> Graph -> Graph
-insertCon (from,to) =
-  Map.insertWith (++) from [to]
-  . Map.insertWith (++) to [from]
+insertCon :: Ord n => Connection n w -> Graph n w -> Graph n w
+insertCon (from, to, weight) =
+  Map.insertWith addCon from (Node from [(weight,to)])
+  . Map.insertWith addCon to (Node to [(weight,from)])
+  where
+    addCon n (Node _ cons) = n { nodeConnections = nodeConnections n ++ cons }
