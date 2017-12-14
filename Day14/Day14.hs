@@ -32,9 +32,9 @@ main = do
 
 
 type Input = String
-
-
-type Grid = [String]
+type Grid = [Line]
+type Line = String
+type Coord = (Int,Int)
 
 
 part1 :: Grid -> Int
@@ -43,43 +43,49 @@ part1 = sum . map (length . filter (== '#'))
 
 part2 :: Grid -> Int
 part2 gr =
-  let graph = scanGrid 0 emptyGraph (repeat '0') gr
+  let graph = intoGraph 0 emptyGraph (repeat '0') gr
   in length $ groups graph
 
+
+----------------------------------------------------------------------
+-- init Grid
 
 initGrid :: Input -> Grid
 initGrid key = [ concatMap charToFrag (knotHash (key ++ "-" ++ show row)) | row <- [0..127] ]
 
 
-scanGrid :: Int -> Graph -> String -> [String] -> Graph
-scanGrid _ gr _ [] = gr
-scanGrid y gr above (l:ls) =
-  let gr' = scanLine y 0 '0' above l gr
-  in scanGrid (y+1) gr' l ls
+----------------------------------------------------------------------
+-- make Grid into a Graph (scanning lines to find adjacent nodes)
+
+intoGraph :: Int -> Graph -> Line -> Grid -> Graph
+intoGraph _ gr _ [] = gr
+intoGraph y gr above (l:ls) =
+  let gr' = scanLine (0,y) '0' above l gr
+  in intoGraph (y+1) gr' l ls
 
 
-scanLine :: Int -> Int -> Char ->  String -> String -> Graph -> Graph
-scanLine _ _ _ [] _ gr = gr
-scanLine _ _ _ _ [] gr = gr
-scanLine y x _ (_:as) ('0':ls) gr =
-  scanLine y (x+1) '0' as ls gr
-scanLine y x '0' ('0':as) ('#':ls) gr =
+scanLine :: Coord -> Char ->  Line -> Line -> Graph -> Graph
+scanLine _ _ [] _ gr = gr
+scanLine _ _ _ [] gr = gr
+scanLine (x,y) _ (_:as) ('0':ls) gr =
+  scanLine (x+1,y) '0' as ls gr
+scanLine (x,y) '0' ('0':as) ('#':ls) gr =
   let gr' = insertCon (coordId (x,y), coordId (x,y)) gr
-  in scanLine y (x+1) '#' as ls gr'
-scanLine y x '0' ('#':as) ('#':ls) gr =
+  in scanLine (x+1,y) '#' as ls gr'
+scanLine (x,y) '0' ('#':as) ('#':ls) gr =
   let gr' = insertCon (coordId (x,y-1), coordId (x,y)) gr
-  in scanLine y (x+1) '#' as ls gr'
-scanLine y x '#' ('0':as) ('#':ls) gr =
+  in scanLine (x+1,y) '#' as ls gr'
+scanLine (x,y) '#' ('0':as) ('#':ls) gr =
   let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
-  in scanLine y (x+1) '#' as ls gr'
-scanLine y x '#' ('#':as) ('#':ls) gr =
+  in scanLine (x+1,y) '#' as ls gr'
+scanLine (x,y) '#' ('#':as) ('#':ls) gr =
   let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
       gr'' = insertCon (coordId (x,y-1), coordId (x,y)) gr'
-  in scanLine y (x+1) '#' as ls gr''
+  in scanLine (x+1,y) '#' as ls gr''
 
 
-coordId :: (Int, Int) -> Int
-coordId (x,y) = y * 500 + x
+coordId :: Coord -> Int
+coordId (x,y) = y * 128 + x
 
 
 ----------------------------------------------------------------------
