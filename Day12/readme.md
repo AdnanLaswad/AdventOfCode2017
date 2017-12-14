@@ -68,4 +68,5 @@ In the example above, there were 2 groups: one consisting of programs
 How many groups are there in total?
 
 ## Solution
-in [Haskell is here](./Day12.hs)
+in [Haskell is here](./Haskell/Day12.hs)
+in [C# is here](./Csharp/Program.cs)
