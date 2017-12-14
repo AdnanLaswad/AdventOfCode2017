@@ -48,7 +48,7 @@ failParse = Parser (const Nothing)
 
 parseList :: Char -> Char -> Char -> Parser a -> Parser [a]
 parseList lBrac rBrac sep p =
-  parseBetween (parseChar lBrac) (parseChar rBrac) $ p `parseSepBy` (parseChar sep)
+  parseBetween (parseChar lBrac) (parseChar rBrac) $ p `parseSepBy` parseChar sep
 
 
 parseBetween :: Parser l -> Parser r -> Parser a -> Parser a
