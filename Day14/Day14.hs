@@ -3,11 +3,10 @@
 module Main where
 
 import Data.Function (on)
-import Data.List (foldl', scanl', sort, group, nub)
+import Data.List (foldl', foldl')
 import Data.Maybe (fromMaybe, mapMaybe, fromJust)
 import Data.Bits (xor)
 import Data.Char (ord)
-import Data.List (foldl1')
 import Text.Printf (printf)
 
 
@@ -15,7 +14,6 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
 
-import Parser
 import Graph
 
 
