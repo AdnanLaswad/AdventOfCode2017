@@ -3,7 +3,7 @@
 module Main where
 
 import Data.Function (on)
-import Data.List (foldl', foldl')
+import Data.List (foldl', foldl1')
 import Data.Maybe (fromMaybe, mapMaybe, fromJust)
 import Data.Bits (xor)
 import Data.Char (ord)
@@ -63,23 +63,25 @@ intoGraph y gr above (l:ls) =
 
 
 scanLine :: Coord -> Char ->  Line -> Line -> Graph -> Graph
-scanLine _ _ [] _ gr = gr
-scanLine _ _ _ [] gr = gr
-scanLine (x,y) _ (_:as) ('0':ls) gr =
-  scanLine (x+1,y) '0' as ls gr
-scanLine (x,y) '0' ('0':as) ('#':ls) gr =
-  let gr' = insertCon (coordId (x,y), coordId (x,y)) gr
-  in scanLine (x+1,y) '#' as ls gr'
-scanLine (x,y) '0' ('#':as) ('#':ls) gr =
-  let gr' = insertCon (coordId (x,y-1), coordId (x,y)) gr
-  in scanLine (x+1,y) '#' as ls gr'
-scanLine (x,y) '#' ('0':as) ('#':ls) gr =
-  let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
-  in scanLine (x+1,y) '#' as ls gr'
-scanLine (x,y) '#' ('#':as) ('#':ls) gr =
-  let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
-      gr'' = insertCon (coordId (x,y-1), coordId (x,y)) gr'
-  in scanLine (x+1,y) '#' as ls gr''
+scanLine (x,y) prev above line gr = go prev above line
+  where
+    go _ [] _ = gr
+    go _ _ [] = gr
+    go _ (_:as) ('0':ls) =
+      scanLine (x+1,y) '0' as ls gr
+    go '0' ('0':as) ('#':ls) =
+      let gr' = insertCon (coordId (x,y), coordId (x,y)) gr
+      in scanLine (x+1,y) '#' as ls gr'
+    go '0' ('#':as) ('#':ls) =
+      let gr' = insertCon (coordId (x,y-1), coordId (x,y)) gr
+      in scanLine (x+1,y) '#' as ls gr'
+    go '#' ('0':as) ('#':ls) =
+      let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
+      in scanLine (x+1,y) '#' as ls gr'
+    go '#' ('#':as) ('#':ls) =
+      let gr' = insertCon (coordId (x-1,y), coordId (x,y)) gr
+          gr'' = insertCon (coordId (x,y-1), coordId (x,y)) gr'
+      in scanLine (x+1,y) '#' as ls gr''
 
 
 coordId :: Coord -> Int
