@@ -4,13 +4,13 @@ module Main where
 
 
 import Data.Bits (Bits, (.&.))
-
+import Data.Word (Word16)
 
 main :: IO ()
 main = do
   let inp = problemInput
-  putStrLn $ "part1: " ++ show (run (1,1) 40000000 inp)
-  putStrLn $ "part2: " ++ show (run (4,8) 5000000 inp)
+  putStrLn $ "part1: " ++ show (run (0,0) 40000000 inp)
+  putStrLn $ "part2: " ++ show (run (3,7) 5000000 inp)
 
 
 type Input = (Int, Int)
@@ -46,15 +46,16 @@ judgeSeq (multA, multB) (startA, startB) =
   (tail $ generate factorB multB startB)
 
 
-judge :: (Integral a, Bits a) => a -> a -> a
-judge a b =
-  if last16Bit a == last16Bit b
-  then 1
-  else 0
+judge :: (Integral a) => a -> a -> a
+judge a b = if last16Bit a == last16Bit b then 1 else 0
 
 
-generate :: Integral a => a -> a -> a -> [a]
-generate factor mult start = filter (\n -> n `mod` mult == 0) $ iterate (genFunction factor) start
+generate :: (Bits a, Integral a) => a -> a -> a -> [a]
+generate factor mult start = filter (noLastBits mult) $ iterate (genFunction factor) start
+
+
+noLastBits :: (Num a, Bits a) => a -> a -> Bool
+noLastBits mask n = n .&. mask == 0
 
 
 genFunction :: Integral a => a -> a -> a
@@ -62,9 +63,5 @@ genFunction factor last =
   (last * factor) `mod` dividend
 
 
-last16Bit :: (Integral a, Bits a) => a -> a
-last16Bit = (.&. mask)
-
-
-mask :: Integral a => a
-mask = 2^16-1
+last16Bit :: (Integral a) => a -> Word16
+last16Bit = fromIntegral
