@@ -1,8 +1,12 @@
 -- Solution to Day 16 of the Advent Of Code 2017
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
+
 module Main where
 
 import Data.List (foldl')
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -13,9 +17,14 @@ main :: IO ()
 main = do
   inp <- readInput
 
-  let part1 = dance inp
+  let part1 = dance inp start
   putStrLn $ "part1: " ++ T.unpack part1
 
+  putStrLn $ "part2: " ++ T.unpack (part2 inp)
+
+
+----------------------------------------------------------------------
+-- data and types
 
 type Input = [DanceMove]
 
@@ -28,16 +37,28 @@ data DanceMove
   deriving Show
 
 
-start :: Line
-start = T.pack ['a'..'p']
+----------------------------------------------------------------------
+-- part 2
+
+part2 :: Input -> Line
+part2 mvs =
+  let cl = cycleLength start mvs
+      times = 10000000 `mod` cl
+  in nTimes times (dance mvs) start
 
 
-exampleStart :: Line
-exampleStart = T.pack ['a'..'e']
+cycleLength :: Line -> [DanceMove] -> Int
+cycleLength s mvs = go s
+  where go x =
+          let x' = dance mvs x
+          in if x' == s then 1 else 1 + go x'
 
 
-dance :: [DanceMove] -> Line
-dance = foldl' (flip move) start
+----------------------------------------------------------------------
+-- part 1
+
+dance :: [DanceMove] -> Line -> Line
+dance = flip (foldl' (flip move))
 
 
 move :: DanceMove -> Line -> Line
@@ -58,6 +79,21 @@ move (Swap a b) line = T.map swap line
           | c == b = a
           | otherwise = c
 
+
+start :: Line
+start = T.pack ['a'..'p']
+
+
+---------------------------------------------------------------------
+-- helpers
+
+nTimes :: Int -> (a -> a) -> a -> a
+nTimes 0 _ !x = x
+nTimes n f !x = nTimes (n-1) f (f x)
+
+
+----------------------------------------------------------------------
+-- input and parsing
 
 readInput :: IO Input
 readInput = fromJust . eval movesP <$> readFile "input.txt"
