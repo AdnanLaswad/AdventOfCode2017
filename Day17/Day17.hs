@@ -10,6 +10,7 @@ main = do
   inp <- readInput
 
   putStrLn $ "part 1: " ++ show (part1 inp)
+  putStrLn $ "part 2: " ++ show (part2 inp)
 
 
 type Input = Int
@@ -19,6 +20,10 @@ data CircularBuffer =
      , bufferIndex   :: Int
      , bufferLength  :: Int
      } deriving Show
+
+
+part2 :: Input -> Int
+part2 inp = getAfter 0 $ run inp 50000000
 
 
 part1 :: Input -> Int
