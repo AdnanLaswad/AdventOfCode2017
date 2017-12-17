@@ -1,19 +1,54 @@
 -- Solution to Day 17 of the Advent Of Code 2017
+{-# LANGUAGE BangPatterns #-}
 module Main where
 
 import Data.Maybe (fromJust)
 import Data.List (foldl')
 import qualified Data.Sequence as S
 
+inputKey :: Int
+inputKey = 304
+
 main :: IO ()
 main = do
-  inp <- readInput
-
-  putStrLn $ "part 1: " ++ show (part1 inp)
-  putStrLn $ "part 2: " ++ show (part2 inp)
+  putStrLn $ "part 1: " ++ show (part1 inputKey)
+  putStrLn $ "part 2: " ++ show (part2 inputKey)
 
 
-type Input = Int
+----------------------------------------------------------------------
+-- part 2
+
+-- | don't need to know anything but (length of buffer, position in buffer, current value after 0)
+--   to do the work here, so we strip all else
+type CircularBufferState = (Int, Int, Int)
+
+
+part2 :: Int -> Int
+part2 inp = run2 inp 50000000
+
+
+part1 :: Int -> Int
+part1 inp = getAfter 2017 $ run inp 2017
+
+
+run2 :: Int -> Int -> Int
+run2 key cnt = go cnt 1 (1,0,0)
+  where
+    go 0 _ (_,_,c) = c
+    go !n v !st    = let st' = step2 key st v in go (n-1) (v+1) st'
+
+
+step2 :: Int -> CircularBufferState -> Int -> CircularBufferState
+step2 key (!len, !pos, !cur) val =
+      let insPos = (pos + key) `mod` len
+          len'   = len + 1
+          pos'   = insPos + 1
+          cur'   = if insPos == 0 then val else cur
+      in (len', pos', cur')
+
+
+----------------------------------------------------------------------
+-- part 1
 
 data CircularBuffer =
   CB { bufferContent :: S.Seq Int
@@ -21,13 +56,6 @@ data CircularBuffer =
      , bufferLength  :: Int
      } deriving Show
 
-
-part2 :: Input -> Int
-part2 inp = getAfter 0 $ run inp 50000000
-
-
-part1 :: Input -> Int
-part1 inp = getAfter 2017 $ run inp 2017
 
 
 getAfter :: Int -> CircularBuffer -> Int
@@ -67,7 +95,3 @@ insertAt :: Int -> a -> S.Seq a -> S.Seq a
 insertAt ind val ss =
   let (sa, sb) = S.splitAt (ind + 1) ss
   in (sa S.|> val) S.>< sb
-
-
-readInput :: IO Input
-readInput = return 304
