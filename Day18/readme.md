@@ -75,4 +75,4 @@ Once both of your programs have terminated (regardless of what caused them to do
 
 ## Solution
 
-- in [Haskell](./Day18.hs) - using STM right now but not 100% sure if the deadlock detection is actually good
+- in [Haskell](./Day18.hs) - using STM/TChan to communicate between two threads

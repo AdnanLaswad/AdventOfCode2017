@@ -1,22 +1,23 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 -- Solution to Day 18 of the Advent Of Code 2017
 
 module Main where
 
-import Control.Concurrent (forkIO, threadDelay)
-import Control.Monad (void, when)
+import Control.Concurrent (forkIO)
+import Control.Concurrent.STM
+import Control.Exception (BlockedIndefinitelyOnSTM, catch)
+import Control.Monad (void)
 import Control.Monad.Reader as R
 import Data.Char (isLetter)
 import qualified Data.IntMap.Strict as IM
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust, fromMaybe)
-import Control.Concurrent.STM
 import Parser
 
 
 main :: IO ()
 main = do
   prg <- readInput
-
   part2 <- run prg
   putStrLn $ "part2 : " ++ show part2
 
@@ -50,7 +51,7 @@ data Environment =
   { registers   :: TVar (M.Map Char Signal)
   , program     :: Program
   , pointer     :: TVar ProgramPointer
-  , receive     :: STM (Maybe Signal)
+  , receive     :: STM Signal
   , send        :: Integer -> STM ()
   , sendCounter :: TVar Int
   }
@@ -65,15 +66,8 @@ type Runtime a = R.ReaderT Environment IO a
 
 run :: Program -> IO Int
 run prg = do
-  (env0, env1, awaitFirstSend) <- initEnvironments prg
-  th0 <- forkIO . void $ R.runReaderT (interpret 0) env0
-  -- thread 2 might run to the first receive before thread 1 even forked
-  -- so we better wait till thread2's queue got written once
-  -- need this because we detect deadlocks but simply looking for two emtpy
-  -- input queues on a read
-  awaitFirstSend
-  -- now we can start the second thread right here - this one will give
-  -- the result
+  (env0, env1) <- initEnvironments prg
+  _ <- forkIO . void $ R.runReaderT (interpret 0) env0
   R.runReaderT (interpret 1) env1
 
 
@@ -127,36 +121,22 @@ next :: Int -> Runtime Int
 next prgNr = movePointer 1 >> interpret prgNr
 
 
-initEnvironments :: Program -> IO (Environment, Environment, IO ())
+initEnvironments :: Program -> IO (Environment, Environment)
 initEnvironments prg = do
   qu0 <- newTQueueIO
   qu1 <- newTQueueIO
   env0 <- create 0 qu0 qu1
   env1 <- create 1 qu1 qu0
-  return (env0, env1, wait qu1)
+  return (env0, env1)
   where
-    -- need to wait for first send to queue
-    wait qu = do
-      threadDelay 100
-      epty <- atomically $ isEmptyTQueue qu
-      when epty $ wait qu
-    isDeadLocked q0 q1 = do
-      epty0 <- isEmptyTQueue q0
-      epty1 <- isEmptyTQueue q1
-      return $ epty0 && epty1
     sendTo sc queueOther sig = do
       modifyTVar' sc (+ 1)
       writeTQueue queueOther sig
-    tryReceive prgNr queue isDeadl = do
-      deadl <- isDeadl
-      if deadl
-        then tryReadTQueue queue
-        else Just <$> readTQueue queue
     create prgNr queue queueOther = do
       ptr  <- newTVarIO 0
-      regs <- newTVarIO (M.fromList [('p', fromIntegral prgNr)])
+      regs <- newTVarIO (M.fromList [('p', prgNr)])
       scnt <- newTVarIO 0
-      return $ Environment regs prg ptr (tryReceive prgNr queue (isDeadLocked queue queueOther)) (sendTo scnt queueOther) scnt
+      return $ Environment regs prg ptr (readTQueue queue) (sendTo scnt queueOther) scnt
 
 
 sendSignal :: Signal -> Runtime ()
@@ -165,7 +145,11 @@ sendSignal sig =
 
 
 receiveSignal :: Runtime (Maybe Signal)
-receiveSignal = R.asks receive >>= lift . atomically
+receiveSignal =
+  R.asks receive >>= \rcv -> lift $ atomically (Just <$> rcv) `catch` onDeadlock
+  where
+    onDeadlock :: BlockedIndefinitelyOnSTM -> IO (Maybe Signal)
+    onDeadlock _ = return Nothing
 
 
 getSendCounter :: Runtime Int
