@@ -11,8 +11,8 @@ cabal-version:       >=1.10
 executable Day18
   main-is:             Day18.hs
   other-modules:       Parser
-                     , Graph
   build-depends:       base >=4.9 && < 5
                      , containers
                      , mtl
+                     , stm
   default-language:    Haskell2010
