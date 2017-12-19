@@ -5,18 +5,19 @@ module Main where
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.List (elemIndex, (\\))
-import Data.Maybe (fromJust, fromMaybe)
+import Data.Maybe (fromMaybe, catMaybes)
 import qualified Data.Map.Strict as M
 import Data.Char (isLetter)
-import Debug.Trace
 
 
 main :: IO ()
 main = do
   inp <- readInput
-  let map = parseInput inp
-      (Just c) = findEntry map
-      (steps, txt) = follow map (0,1) c
+  let map' = parseInput inp
+      (Just c) = findEntry map'
+      path = follow map' (0,1) c
+      txt = catMaybes path
+      steps = length path
   putStrLn $ "part1: " ++ txt
   putStrLn $ "part2: " ++ show steps
 
@@ -28,18 +29,18 @@ type Direction = (Int,Int)
 
 
 findEntry :: Map -> Maybe Coord
-findEntry map =
-  (,0) <$> (elemIndex '|' . M.elems $ map M.! 0)
+findEntry map' =
+  (,0) <$> (elemIndex '|' . M.elems $ map' M.! 0)
 
 
-follow :: Map -> Direction -> Coord -> (Int, [Char])
+follow :: Map -> Direction -> Coord -> [Maybe Char]
 follow map d@(dx,dy) c@(x,y) =
   let c' = (x+dx,y+dy)
   in case getAt map c' of
-       Nothing -> (0,[])
+       Nothing -> []
        Just c ->
-         let (restSteps,rest) = fromMaybe (0,[]) $ ((\d' -> follow map d' c') <$> direction map d c')
-         in if isLetter c then (1 + restSteps, c : rest) else (1 + restSteps, rest)
+         let rest = fromMaybe [] ((\d' -> follow map d' c') <$> direction map d c')
+         in if isLetter c then Just c : rest else Nothing : rest
 
 
 direction :: Map -> Direction -> Coord -> Maybe Direction
