@@ -16,8 +16,9 @@ main = do
   inp <- readInput
   let map = parseInput inp
       (Just c) = findEntry map
-      txt = follow map (0,1) c
+      (steps, txt) = follow map (0,1) c
   putStrLn $ "part1: " ++ txt
+  putStrLn $ "part2: " ++ show steps
 
 
 type Input = [T.Text]
@@ -31,14 +32,14 @@ findEntry map =
   (,0) <$> (elemIndex '|' . M.elems $ map M.! 0)
 
 
-follow :: Map -> Direction -> Coord -> [Char]
+follow :: Map -> Direction -> Coord -> (Int, [Char])
 follow map d@(dx,dy) c@(x,y) =
   let c' = (x+dx,y+dy)
   in case getAt map c' of
-       Nothing -> []
+       Nothing -> (0,[])
        Just c ->
-         let rest = fromMaybe [] $ ((\d' -> follow map d' c') <$> direction map d c')
-         in if isLetter c then c : rest else rest
+         let (restSteps,rest) = fromMaybe (0,[]) $ ((\d' -> follow map d' c') <$> direction map d c')
+         in if isLetter c then (1 + restSteps, c : rest) else (1 + restSteps, rest)
 
 
 direction :: Map -> Direction -> Coord -> Maybe Direction
