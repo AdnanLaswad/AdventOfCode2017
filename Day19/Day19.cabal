@@ -10,8 +10,6 @@ cabal-version:       >=1.10
 
 executable Day19
   main-is:             Day19.hs
-  other-modules:       Parser
-                     , Graph
   build-depends:       base >=4.9 && < 5
                      , containers
                      , text
