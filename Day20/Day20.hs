@@ -16,10 +16,10 @@ main = do
   putStrLn $ "part 1: " ++ show (number $ minimum inp)
 
   -- simulate says 420! (which is right but not satisfying)
-  let part2 = length $ simulate inp
+  -- let part2 = length $ simulate inp
 
   -- but this says 423 - SHIIT
-  -- let part2 = length $ removeCollisions inp
+  let part2 = length $ removeCollisions inp
   putStrLn $ "part 2: " ++ show part2
 
 
@@ -90,7 +90,28 @@ collide pa pb = go 0 (dist (position pa) (position pb)) pa pb
              then Just t
              -- this condition is *wrong* - if the acceleration and/or speed is right
              -- it might come closer later
-             else if oldD < d then Nothing else go (t+1) d px' py'
+             else if areAttracted px py then go (t+1) d px' py' else Nothing
+
+
+areAttracted :: Particle -> Particle -> Bool
+areAttracted pa pb =
+  let
+    pa' = tick pa
+    pb' = tick pb
+    pa'' = tick pa'
+    pb'' = tick pb'
+    pa''' = tick pa''
+    pb''' = tick pb''
+    d0 = dist (position pa) (position pb)
+    d1 = dist (position pa') (position pb')
+    d2 = dist (position pa'') (position pb'')
+    d3 = dist (position pa''') (position pb''')
+    dd0 = d1 - d0
+    dd1 = d2 - d1
+    dd2 = d3 - d2
+    ddd0 = dd1 - dd0
+    ddd1 = dd2 - dd1
+  in d0 > d1 || dd0 > dd1 || ddd0 > ddd1
 
 
 collisions :: [Particle] -> [(Particle,Particle)]
