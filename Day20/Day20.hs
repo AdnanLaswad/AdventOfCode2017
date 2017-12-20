@@ -15,12 +15,11 @@ main = do
 
   putStrLn $ "part 1: " ++ show (number $ minimum inp)
 
-  -- simulate says 420!
-  -- let ps' = simulate inp
-  -- print ps'
+  -- simulate says 420! (which is right but not satisfying)
+  let part2 = length $ simulate inp
 
   -- but this says 423 - SHIIT
-  let part2 = length $ removeCollisions inp
+  -- let part2 = length $ removeCollisions inp
   putStrLn $ "part 2: " ++ show part2
 
 
@@ -73,10 +72,12 @@ areColliding :: [Particle] -> [Particle]
 areColliding ps = concat [[a,b] | (a,b) <- pickTwo ps, position a == position b ]
 
 
+-- poor mans solution: just remove all collisions from the first 100 ticks
 simulate :: [Particle] -> [Particle]
-simulate ps =
-  let ps' = ps \\ areColliding ps
-  in trace (show $ length ps') $ simulate (tick <$> ps')
+simulate = head . drop 100 . iterate go
+  where go ps =
+          let ps' = ps \\ areColliding ps
+          in  tick <$> ps'
 
 
 collide :: Particle -> Particle -> Maybe Int
@@ -87,6 +88,8 @@ collide pa pb = go 0 (dist (position pa) (position pb)) pa pb
               d   = dist (position px) (position py)
           in if d == 0
              then Just t
+             -- this condition is *wrong* - if the acceleration and/or speed is right
+             -- it might come closer later
              else if oldD < d then Nothing else go (t+1) d px' py'
 
 
