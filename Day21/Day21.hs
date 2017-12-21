@@ -4,7 +4,6 @@
 module Main where
 
 import qualified Data.Set as S
-import Data.List (find)
 import Data.Maybe (fromJust)
 import Parser
 
@@ -12,14 +11,21 @@ import Parser
 main :: IO ()
 main = do
   inp <- readInput
+  let ts = transforms inp
 
-  putStrLn $ "part 1: " ++ show (part1 inp)
+  putStrLn $ "part 1: " ++ show (part1 ts)
+  putStrLn $ "part 2: " ++ show (part2 ts)
 
 
-part1 :: Input -> Int
-part1 rules =
-  let ts = transforms rules
-      img = expandImage ts 5
+part1 :: [Transform] -> Int
+part1 ts =
+  let img = expandImage ts 5
+  in S.size $ pixels img
+
+
+part2 :: [Transform] -> Int
+part2 ts =
+  let img = expandImage ts 18
   in S.size $ pixels img
 
 
@@ -100,13 +106,13 @@ squares3 img = map (getSquare3 img) [ (x,y) | y <- [0,3..dim img - 1], x <- [0,3
 
 
 getSquare2 :: Image -> Coord -> (Coord, Square)
-getSquare2 img off@(offX,offY) = (newOff,) $ Square 2 $ S.fromList $ concat
+getSquare2 img (offX,offY) = (newOff,) $ Square 2 $ S.fromList $ concat
   [ [(x*2-1, y*2-1) | x <- [0,1], getPixel img (offX+x, offY+y) ] | y <- [0,1] ]
   where newOff = ((offX `div` 2) * 3, (offY `div` 2) * 3)
 
 
 getSquare3 :: Image -> Coord -> (Coord, Square)
-getSquare3 img off@(offX,offY) = (newOff,) $ Square 3 $ S.fromList $ concat
+getSquare3 img (offX,offY) = (newOff,) $ Square 3 $ S.fromList $ concat
   [ [(x-1, y-1) | x <- [0..2], getPixel img (offX+x, offY+y) ] | y <- [0..2] ]
   where newOff = ((offX `div` 3) * 4, (offY `div` 3) * 4)
 
@@ -115,6 +121,7 @@ squareToImgCoords :: Coord -> Square -> [Coord]
 squareToImgCoords off (Square 2 cs) = square2toImgCoords off (S.toList cs)
 squareToImgCoords off (Square 3 cs) = square3toImgCoords off (S.toList cs)
 squareToImgCoords off (Square 4 cs) = square4toImgCoords off (S.toList cs)
+squareToImgCoords _ _ = error "there should be no square bigger than 4"
 
 
 square2toImgCoords :: Coord -> [Coord] -> [Coord]
@@ -131,6 +138,7 @@ square4toImgCoords (offX,offY) cs = [ (offX + m x, offY + m y) | (x,y) <- cs ]
         m (-1) = 1
         m 1    = 2
         m 2    = 3
+        m _    = error "invalid offset"
 
 
 
@@ -151,6 +159,8 @@ patternToSquare (3, pxs) =
 patternToSquare (4, pxs) =
   let withCoords = map (\ (y,ps) -> map (\ (x,c) -> ((x,y), c)) $ zip [-2,-1,1,2] ps ) $ zip [-2,-1,1,2] pxs
   in Square 4 $ S.fromList $ concatMap (map fst . filter ((== '#') . snd)) withCoords
+patternToSquare _ = error "there should be no pattern bigger than 4"
+
 
 
 
