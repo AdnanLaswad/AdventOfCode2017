@@ -5,15 +5,30 @@ module Main where
 
 import qualified Data.Set as S
 import Data.List (find)
+import Data.Maybe (fromJust)
+import Parser
 
 
 main :: IO ()
 main = do
   inp <- readInput
-  putStrLn $ "solve me"
+
+  putStrLn $ "part 1: " ++ show (part1 inp)
 
 
-type Input = ()
+part1 :: Input -> Int
+part1 rules =
+  let ts = transforms rules
+      img = expandImage ts 5
+  in S.size $ pixels img
+
+
+transforms :: Input -> [Transform]
+transforms = concatMap ruleToTransforms
+
+
+
+type Input = [Rule]
 
 data Image =
   Image
@@ -43,6 +58,10 @@ instance Eq Square where
 startImage :: Image
 startImage = Image 3 (S.fromList pxls)
   where pxls = [ (1,0), (2,1), (0,2), (1,2), (2,2) ]
+
+
+expandImage :: [Transform] -> Int -> Image
+expandImage ts n = nTimes n (transformImage ts) startImage
 
 
 transformImage :: [Transform] -> Image -> Image
@@ -136,10 +155,13 @@ patternToSquare (4, pxs) =
 
 
 defaultTransforms :: [Coord -> Coord]
-defaultTransforms = [ id, rot90, rot180, rot270, flipX, flipY ]
+defaultTransforms = [ id, rot90, rot180, rot270, flipX, fRot90, fRot180, fRot270 ]
   where rot90 = rotate
         rot180 = rot90 . rot90
         rot270 = rot90 . rot180
+        fRot90 = flipX . rot90
+        fRot180 = flipX . rot180
+        fRot270 = flipX . rot270
 
 
 rotate :: Coord -> Coord
@@ -148,10 +170,6 @@ rotate (x,y) = (negate y, x)
 
 flipX :: Coord -> Coord
 flipX (x,y) = (negate x, y)
-
-
-flipY :: Coord -> Coord
-flipY (x,y) = (x, negate y)
 
 
 translate :: Coord -> Coord -> Coord
@@ -181,7 +199,7 @@ nTimes n f !x = nTimes (n-1) f (f x)
 exampleRules :: [Rule]
 exampleRules =
   [ ((2, ["..",".#"]), (3,["##.","#..","..."]))
-  , ((3, [".#.","..#","###"]), (4,["#..#","....","....","#..#"]))
+  , ((3, ["###","#..",".#."]), (4,["#..#","....","....","#..#"]))
   ]
 
 
@@ -190,4 +208,13 @@ exampleTransforms = concatMap ruleToTransforms exampleRules
 
 
 readInput :: IO Input
-readInput = const () <$> readFile "input.txt"
+readInput = map (fromJust . eval ruleP) . lines <$> readFile "input.txt"
+
+
+ruleP :: Parser Rule
+ruleP = (,) <$> (patternP <* ignoreWhiteSpace <* parseString "=>" <* ignoreWhiteSpace) <*> (patternP <* ignoreWhiteSpace)
+
+
+patternP :: Parser Pattern
+patternP = (\ xs@(x:_) -> (length x, xs)) <$> lineP `parseSepBy1` parseString "/"
+  where lineP = parseMany (parsePred (\c -> c == '.' || c == '#'))
