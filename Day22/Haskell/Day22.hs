@@ -112,7 +112,7 @@ nTimes n f x = nTimes (n-1) f (f x)
 
 
 readInput :: IO Input
-readInput = parseInput . lines <$> readFile "input.txt"
+readInput = parseInput . lines <$> readFile "../input.txt"
 
 
 parseInput :: [String] -> Grid

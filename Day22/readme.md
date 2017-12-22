@@ -215,5 +215,5 @@ Given your actual map, after 10000000 bursts of activity, how many bursts cause 
 
 ## Solution
 
-- in [Haskell](./Day22.hs)
+- in [Haskell](./Haskell/Day22.hs)
 - in [C#](./CSharp/Program.cs)
