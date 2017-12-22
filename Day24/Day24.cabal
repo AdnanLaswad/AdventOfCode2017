@@ -1,0 +1,17 @@
+name:                Day24
+version:             0.1.0.0
+synopsis:            day 24 from advent of code 2017
+license-file:        LICENSE
+author:              Carsten Koenig
+maintainer:          Carsten@gettingsharper.de
+category:            Game
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable Day24
+  main-is:             Day24.hs
+  other-modules:       Parser
+                     , Graph
+  build-depends:       base >=4.9 && < 5
+                     , containers
+  default-language:    Haskell2010
