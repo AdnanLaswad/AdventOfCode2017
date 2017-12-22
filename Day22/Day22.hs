@@ -2,21 +2,22 @@
 
 module Main where
 
-import qualified Data.Set as S
+import qualified Data.Map.Strict as M
+import Data.Maybe (fromMaybe)
 
 main :: IO ()
 main = do
   grd <- readInput
 
-  let part1 = infected $ doBursts 10000 grd
-  putStrLn $ "part 1: " ++ show part1
+  let part2 = infected $ doBursts 10000000 grd
+  putStrLn $ "part 2: " ++ show part2
 
 
 type Input = Grid
 
 data Grid =
   Grid
-  { infectedCoords :: S.Set Coord
+  { stateCoords    :: M.Map Coord State
   , carrierAt      :: Coord
   , carrierDir     :: Direction
   , infected       :: Int
@@ -28,6 +29,9 @@ data Direction = DUp | DLeft | DRight | DDown
   deriving Show
 
 
+data State = Clean | Weakened | Infected | Flagged
+  deriving Show
+
 doBursts :: Int -> Grid -> Grid
 doBursts n = nTimes n burst
 
@@ -38,26 +42,40 @@ burst = move . toggleInfection . turn
 
 turn :: Grid -> Grid
 turn grd =
-  if isInfected grd
-  then grd { carrierDir = rotateRight (carrierDir grd) }
-  else grd { carrierDir = rotateLeft (carrierDir grd) }
+  case getState grd of
+    Clean    -> grd { carrierDir = rotateLeft (carrierDir grd) }
+    Weakened -> grd
+    Infected -> grd { carrierDir = rotateRight (carrierDir grd) }
+    Flagged  -> grd { carrierDir = reverseDir (carrierDir grd) }
 
 
 toggleInfection :: Grid -> Grid
 toggleInfection grd =
-  if isInfected grd
-  then grd { infectedCoords = carrierAt grd `S.delete` infectedCoords grd }
-  else grd { infectedCoords = carrierAt grd `S.insert` infectedCoords grd
-           , infected       = infected grd + 1
-           }
+  case getState grd of
+    Clean    -> setState Weakened grd
+    Weakened -> countInfection $ setState Infected grd
+    Infected -> setState Flagged grd
+    Flagged  -> resetState grd
 
 
 move :: Grid -> Grid
 move grd = grd { carrierAt = moveIn (carrierDir grd) (carrierAt grd) }
 
 
-isInfected :: Grid -> Bool
-isInfected grd = carrierAt grd `S.member` infectedCoords grd
+countInfection :: Grid -> Grid
+countInfection grd = grd { infected = infected grd + 1 }
+
+
+getState :: Grid -> State
+getState grd = fromMaybe Clean $ carrierAt grd `M.lookup` stateCoords grd
+
+
+setState :: State -> Grid -> Grid
+setState state grd = grd { stateCoords = M.insert (carrierAt grd) state (stateCoords grd) }
+
+
+resetState :: Grid -> Grid
+resetState grd = grd { stateCoords = M.delete (carrierAt grd) (stateCoords grd) }
 
 
 rotateLeft :: Direction -> Direction
@@ -72,6 +90,13 @@ rotateRight DUp    = DRight
 rotateRight DRight = DDown
 rotateRight DDown  = DLeft
 rotateRight DLeft  = DUp
+
+
+reverseDir :: Direction -> Direction
+reverseDir DUp    = DDown
+reverseDir DRight = DLeft
+reverseDir DDown  = DUp
+reverseDir DLeft  = DRight
 
 
 moveIn :: Direction -> Coord -> Coord
@@ -93,8 +118,8 @@ readInput = parseInput . lines <$> readFile "input.txt"
 parseInput :: [String] -> Grid
 parseInput ls =
   let infGrd =
-        S.fromList
-        $ map fst
+        M.fromList
+        $ map (\ ((x,y), inf) -> ((x,y), Infected))
         $ filter snd
         $ concatMap (\(y,cs) -> zipWith (\x c -> ((x,y), c == '#')) [0..] cs)
         $ zip [0..] ls
