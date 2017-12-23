@@ -19,10 +19,28 @@ import Debug.Trace
 main :: IO ()
 main = do
   prg <- readInput
-  part1 <- run prg
 
-  putStrLn $ "part2 : " ++ show part1
+  part1 <- run prg 0
+  putStrLn $ "part1 : " ++ show part1
 
+  putStrLn $ "part2 : " ++ show part2
+
+----------------------------------------------------------------------
+-- part 2
+
+part2 :: Int
+part2 = length $ filter (not . isPrime) [106500, 106500+17 .. 123500]
+
+
+isPrime :: Integral a => a -> Bool
+isPrime n = not . any (`divides` n) $ takeWhile (\i -> i*i <= n) [2..]
+
+
+divides :: Integral a => a -> a -> Bool
+divides d n = n `mod` d == 0
+
+----------------------------------------------------------------------
+-- part 1
 
 type Input = Program
 
@@ -61,9 +79,9 @@ type Signal = Integer
 type Runtime a = R.ReaderT Environment IO a
 
 
-run :: Program -> IO Int
-run prg = do
-  env <- initEnvironment prg
+run :: Program -> Int -> IO Int
+run prg aVal = do
+  env <- initEnvironment prg aVal
   R.runReaderT interpret env
 
 
@@ -104,14 +122,14 @@ next :: Runtime Int
 next = movePointer 1 >> interpret
 
 
-initEnvironment :: Program -> IO Environment
-initEnvironment prg = do
+initEnvironment :: Program -> Int -> IO Environment
+initEnvironment prg aVal = do
   env <- create
   return env
   where
     create = do
       ptr  <- newTVarIO 0
-      regs <- newTVarIO M.empty
+      regs <- newTVarIO (M.fromList [('a', fromIntegral aVal)])
       mulCnt <- newTVarIO 0
       return $ Environment regs prg ptr mulCnt
 
