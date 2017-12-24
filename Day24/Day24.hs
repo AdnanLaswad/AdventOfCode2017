@@ -4,7 +4,7 @@ module Main where
 
 import Data.Function (on)
 import Data.Maybe (fromJust, fromMaybe)
-import Data.List (maximumBy)
+import Data.List (maximumBy, sortBy, groupBy)
 import qualified Data.IntMap.Strict as IM
 import qualified Data.IntSet as IS
 import Parser
@@ -15,6 +15,7 @@ main = do
   inp <- readInput
 
   putStrLn $ "part 1: " ++ show (part1 inp)
+  putStrLn $ "part 2: " ++ show (part2 inp)
 
 
 type Input = [Component]
@@ -32,12 +33,20 @@ part1 :: Input -> Int
 part1 = maximum . map strength . chains . createStash
 
 
+part2 :: Input -> Int
+part2 =
+  maximum . map strength . head . groupBy ((==) `on` chainLength) . sortBy (flip compare `on` chainLength) . chains . createStash
+
 strongest :: [Chain] -> Chain
 strongest = maximumBy (compare `on` strength)
 
 
 strength :: Chain -> Int
-strength = sum . map (uncurry (+)) 
+strength = sum . map (uncurry (+))
+
+
+chainLength :: Chain -> Int
+chainLength = length
 
 
 chains :: Stash -> [Chain]
