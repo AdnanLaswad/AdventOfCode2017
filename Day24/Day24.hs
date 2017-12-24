@@ -2,12 +2,12 @@
 
 module Main where
 
+import Control.Arrow ((&&&))
 import Data.Function (on)
 import qualified Data.IntMap.Strict as IM
 import qualified Data.IntSet as IS
 import Data.Maybe (fromJust, fromMaybe)
 import Parser
-import Control.Arrow ((&&&))
 
 
 main :: IO ()
