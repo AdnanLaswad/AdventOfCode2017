@@ -14,3 +14,4 @@ executable Day24
   build-depends:       base >=4.9 && < 5
                      , containers
   default-language:    Haskell2010
+  ghc-options:         -O2

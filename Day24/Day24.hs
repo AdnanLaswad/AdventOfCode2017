@@ -4,6 +4,7 @@ module Main where
 
 import Data.Function (on)
 import qualified Data.IntMap.Strict as IM
+import qualified Data.IntSet as IS
 import Data.List (maximumBy, sortBy, groupBy)
 import Data.Maybe (fromJust, fromMaybe)
 import Parser
@@ -19,7 +20,7 @@ main = do
 
 type Input = [Component]
 
-type Stash = IM.IntMap [Port]
+type Stash = IM.IntMap IS.IntSet
 
 type Component = (Port, Port)
 
@@ -53,7 +54,7 @@ chains :: Stash -> [Chain]
 chains stash = map snd $ go (stash, 0)
   where
     go (st, from) =
-      let tos = fromMaybe [] $ IM.lookup from st
+      let tos = fromMaybe [] . fmap IS.toList $ IM.lookup from st
       in if null tos
          then return (st, [])
          else do
@@ -68,19 +69,12 @@ createStash = foldr addToStash IM.empty
 
 
 addToStash :: Component -> Stash -> Stash
-addToStash (a,b) = IM.insertWith (++) a [b] . IM.insertWith (++) b [a]
+addToStash (a,b) = IM.insertWith IS.union a (IS.singleton b) . IM.insertWith IS.union b (IS.singleton a)
 
 
 removeFromStash :: Component -> Stash -> Stash
 removeFromStash (a,b) =
-  IM.insertWith (\ _ -> delete b) a [] . IM.insertWith (\ _ -> delete a) b []
-
-
-delete :: Eq a => a -> [a] -> [a]
-delete _ [] = []
-delete x (y:ys)
-  | x == y = ys
-  | otherwise = y : delete x ys
+  IM.insertWith (\ _ -> IS.delete b) a IS.empty . IM.insertWith (\ _ -> IS.delete a) b IS.empty
 
 
 pickOne :: [a] -> [(a,[a])]
