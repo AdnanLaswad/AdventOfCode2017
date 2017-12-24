@@ -5,9 +5,9 @@ module Main where
 import Data.Function (on)
 import qualified Data.IntMap.Strict as IM
 import qualified Data.IntSet as IS
-import Data.List (maximumBy, sortBy, groupBy)
 import Data.Maybe (fromJust, fromMaybe)
 import Parser
+import Control.Arrow ((&&&))
 
 
 main :: IO ()
@@ -35,11 +35,7 @@ part1 = maximum . map strength . chains . createStash
 
 part2 :: Input -> Int
 part2 =
-  maximum . map strength . head . groupBy ((==) `on` chainLength) . sortBy (flip compare `on` chainLength) . chains . createStash
-
-
-strongest :: [Chain] -> Chain
-strongest = maximumBy (compare `on` strength)
+  snd . maximum . map (length &&& strength) . chains . createStash
 
 
 strength :: Chain -> Int
@@ -54,7 +50,7 @@ chains :: Stash -> [Chain]
 chains stash = map snd $ go (stash, 0)
   where
     go (st, from) =
-      let tos = fromMaybe [] . fmap IS.toList $ IM.lookup from st
+      let tos = maybe [] IS.toList $ IM.lookup from st
       in if null tos
          then return (st, [])
          else do
