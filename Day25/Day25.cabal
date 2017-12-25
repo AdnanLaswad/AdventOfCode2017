@@ -10,7 +10,6 @@ cabal-version:       >=1.10
 
 executable Day25
   main-is:             Day25.hs
-  other-modules:       Parser
   build-depends:       base >=4.9 && < 5
                      , containers
                      , mtl
